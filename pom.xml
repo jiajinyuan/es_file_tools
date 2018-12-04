@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.sefonsoft.poc</groupId>
+    <artifactId>es_file_tools</artifactId>
+    <version>1.0</version>
+
+    <properties>
+        <project.build.encoding>UTF-8</project.build.encoding>
+        <build.jar.path>D:\\work\\bigdata\\poc\\es\\es_tools_jar</build.jar.path>
+        <slf4j.version>1.7.25</slf4j.version>
+        <log4j.version>1.2.17</log4j.version>
+        <java.version>1.8</java.version>
+    </properties>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>6.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>6.4.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!-- 这是个编译java代码的 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${project.build.encoding}</encoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 打可执行jar包配置  执行mavn:package  都绑定在package周期上，打包后都会拷贝到${build.jar.path} start-->
+
+            <!-- 打包当前工程为可执行jar包（没包含依赖包，但是设置了依赖包在lib下） start-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <!-- The configuration of the plugin -->
+                <configuration>
+                    <!-- Configuration of the archiver -->
+                    <archive>
+                        <!-- do not include pom.xml and pom.properties in the jar package -->
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                        <!-- Manifest specific configuration -->
+                        <manifest>
+                            <!-- put third party jar package into the classpath of manifest -->
+                            <addClasspath>true</addClasspath>
+                            <!-- the prefix of the jar items in the classpath, it depends on the
+                                location(folder) of jar files -->
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <!-- main class of the jar package -->
+                            <mainClass>com.sefon.Main</mainClass>
+                        </manifest>
+                    </archive>
+                    <!-- excludes some files -->
+                    <excludes>
+                        <exclude>*.properties</exclude>
+                    </excludes>
+                    <outputDirectory>${build.jar.path}</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 打包当前工程为可执行jar包  end -->
+
+            <!-- 打包当前工程的依赖jar包  start -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${build.jar.path}\\lib</outputDirectory>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <excludeTransitive>false</excludeTransitive>
+                            <stripVersion>false</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 打包当前工程的依赖jar包  end -->
+            <!-- copy 需要暴露出来的配置文件  start  -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${build.jar.path}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.outputDirectory}</directory>
+                                    <includes>
+                                        <include>*.properties</include>
+                                        <include>*.sh</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <overwrite>true</overwrite>
+                            <encoding>${project.build.encoding}</encoding>
+                        </configuration>
+
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- copy 需要暴露出来的配置文件  end -->
+
+            <!-- 打可执行jar包配置 end -->
+        </plugins>
+    </build>
+
+
+</project>
